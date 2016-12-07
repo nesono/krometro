@@ -13,5 +13,5 @@ KROM_METER(statistics, stddev, 10, 10)
 }
 
 int main() {
-    RUN_ALL_TESTS();
+    return RUN_ALL_TESTS();
 }

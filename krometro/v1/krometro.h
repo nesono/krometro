@@ -89,13 +89,26 @@ namespace krom {
 
     struct KromMeterBase
     {
-        KromMeterBase(std::string suite)
+        KromMeterBase(
+                std::string suite,
+                std::string name,
+                uint32_t samples,
+                uint32_t runs
+        ) : _suite(suite),
+            _name(name),
+            _samples(samples),
+            _runs(runs)
         {
             registerKromMeter(suite, this);
         }
         virtual ~KromMeterBase() {}
 
         virtual void Body() = 0;
+
+        std::string _suite;
+        std::string _name;
+        uint32_t _samples;
+        uint32_t _runs;
     };
 
     struct TestRunner
@@ -104,7 +117,9 @@ namespace krom {
         {
             auto testmap = KromMeterRegistry::instance().test_registry;
             for (auto test : testmap) {
+                std::cout << "[KROMRUN " << test.second->_suite << "." << test.second->_name << "]" << std::endl;
                 test.second->Body();
+                std::cout << "[" << test.second->_suite << "." << test.second->_name << " DONE]" << std::endl;
             }
             return 0;
         }
@@ -122,15 +137,16 @@ namespace krom {
 #define CONCAT( a, b, c, d, e ) CONCATEXT( a, b, c, d, e )
 
 #define KROM_METER(suite, name, samples, runs) \
-    namespace ___meter { \
+    namespace meter { \
       struct CONCAT(Krom_, suite, name, samples, runs) \
         : public krom::KromMeterBase \
       { \
         CONCAT(Krom_, suite, name, samples, runs)() \
-          : krom::KromMeterBase(#suite) \
+          : krom::KromMeterBase(#suite, #name, samples, runs) \
         {} \
         inline void Body(); \
       }; \
+      static CONCAT(Krom_, suite, name, samples, runs) CONCAT(kromInstance, suite, name, samples, runs); \
     } \
-    inline void ___meter::CONCAT(Krom_, suite, name, samples, runs)::Body()
+    inline void meter::CONCAT(Krom_, suite, name, samples, runs)::Body()
 }

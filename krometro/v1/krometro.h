@@ -34,92 +34,136 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #define krom kromv1
 
-namespace krom {
-    template<class T>
-    double standarddeviation(const std::vector<T> &observations) {
-        /*  // This is a plain implementation
-            double e_x = 0;
-            for (auto i : observations) {
-                e_x += i;
+namespace krom
+{
+    namespace internal {
+        template<class T>
+        double standarddeviation(const std::vector<T> &observations) {
+            /*  // This is a plain implementation
+                double e_x = 0;
+                for (auto i : observations) {
+                    e_x += i;
+                }
+                auto N = observations.size();
+                e_x /= N;
+                double res = 0;
+                for (auto i : observations) {
+                    auto tmp = i - e_x;
+                    res += tmp * tmp;
+                }
+
+                auto variance = res / (N - 1);
+                return std::sqrt(variance);
+                //  below is an optimized implementation */
+            double A = observations[0];
+            double Q = 0;
+            for (auto i = 1U; i < observations.size(); ++i) {
+                auto A_1 = A;
+                A += (observations[i] - A) / (i + 1);
+                Q += (observations[i] - A_1) * (observations[i] - A);
             }
-            auto N = observations.size();
-            e_x /= N;
-            double res = 0;
-            for (auto i : observations) {
-                auto tmp = i - e_x;
-                res += tmp * tmp;
+            return std::sqrt(Q / (observations.size() - 1));
+        }
+
+        template<class T>
+        double mean(const std::vector<T> &observations) {
+            double m = 0;
+            for (auto v: observations)
+                m += v;
+            return m / observations.size();
+        }
+
+        struct KromMeterBase;
+        using testmap_t = std::multimap<std::string, KromMeterBase *>;
+
+        struct KromMeterRegistry {
+             testmap_t test_registry;
+
+            static KromMeterRegistry &instance() {
+                static KromMeterRegistry instance;
+                return instance;
+            }
+        };
+
+        void registerKromMeter(std::string suite, KromMeterBase *meter) {
+            KromMeterRegistry::instance().test_registry.emplace(suite, meter);
+        }
+
+        struct KromMeterBase {
+            KromMeterBase(
+                    std::string suite,
+                    std::string name,
+                    uint32_t samples,
+                    uint32_t runs
+            ) : _suite(suite),
+                _name(name),
+                _samples(samples),
+                _runs(runs) {
+                registerKromMeter(suite, this);
             }
 
-            auto variance = res / (N - 1);
-            return std::sqrt(variance);
-            //  below is an optimized implementation */
-        double A = observations[0];
-        double Q = 0;
-        for (auto i = 1U; i < observations.size(); ++i) {
-            auto A_1 = A;
-            A += (observations[i] - A) / (i + 1);
-            Q += (observations[i] - A_1) * (observations[i] - A);
-        }
-        return std::sqrt(Q / (observations.size() - 1));
-    }
+            virtual ~KromMeterBase() {}
 
-    template<class T>
-    double mean(const std::vector<T> &observations) {
-        double m = 0;
-        for (auto v: observations)
-            m += v;
-        return m / observations.size();
-    }
+            virtual void Body() = 0;
 
-    struct KromMeterBase;
-    struct KromMeterRegistry
-    {
-        std::multimap<std::string, KromMeterBase*> test_registry;
-        static KromMeterRegistry& instance()
+            std::string _suite;
+            std::string _name;
+            uint32_t _samples;
+            uint32_t _runs;
+        };
+
+        struct TestrunDecorator
         {
-            static KromMeterRegistry instance;
-            return instance;
-        }
-    };
+            TestrunDecorator(const testmap_t::value_type& test): _test(test)
+            {
+                std::cout << "[KROMRUN " << test.second->_suite << "." << test.second->_name << "]" << std::endl;
+            }
+            ~TestrunDecorator()
+            {
+                std::cout << "[" << _test.second->_suite << "." << _test.second->_name << " DONE]" << std::endl;
+                std::cout << std::endl;
+            }
+            const testmap_t::value_type& _test;
+        };
 
-    void registerKromMeter(std::string suite, KromMeterBase* meter)
-    {
-        KromMeterRegistry::instance().test_registry.emplace(suite, meter);
-    }
-
-    struct KromMeterBase
-    {
-        KromMeterBase(
-                std::string suite,
-                std::string name,
-                uint32_t samples,
-                uint32_t runs
-        ) : _suite(suite),
-            _name(name),
-            _samples(samples),
-            _runs(runs)
+        struct StatisticsPrinter
         {
-            registerKromMeter(suite, this);
-        }
-        virtual ~KromMeterBase() {}
-
-        virtual void Body() = 0;
-
-        std::string _suite;
-        std::string _name;
-        uint32_t _samples;
-        uint32_t _runs;
-    };
+            StatisticsPrinter(const std::vector<uint64_t>& observations)
+            {
+                std::cout << "  Results of " << observations.size() << " runs given in nanoseconds" << std::endl;
+                auto minmax = std::minmax_element(observations.begin(), observations.end());
+                std::cout << "    min: " << *minmax.first << " ns" << std::endl;
+                std::cout << "    max: " << *minmax.second << " ns" << std::endl;
+                std::cout << "    mean: " << mean(observations) << " ns " << std::endl;
+                std::cout << "    std dev: " << standarddeviation(observations) << " ns" << std::endl;
+            }
+        };
+    }
 
     struct TestRunner
     {
         int runAllTests() const
         {
-            auto testmap = KromMeterRegistry::instance().test_registry;
+            auto testmap = internal::KromMeterRegistry::instance().test_registry;
             for (auto test : testmap) {
-                std::cout << "[KROMRUN " << test.second->_suite << "." << test.second->_name << "]" << std::endl;
-                test.second->Body();
-                std::cout << "[" << test.second->_suite << "." << test.second->_name << " DONE]" << std::endl;
+                internal::TestrunDecorator deco(test);
+                std::vector<uint64_t> runtimes;
+
+                for(auto r = 0; r < test.second->_runs; ++r)
+                {
+                    std::vector<uint64_t> samplestimes;
+
+                    for(auto s = 0; s < test.second->_samples; ++s)
+                    {
+                        auto start = std::chrono::high_resolution_clock::now();
+                        test.second->Body();
+                        auto end = std::chrono::high_resolution_clock::now();
+                        samplestimes.push_back(
+                                std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
+                    }
+                    runtimes.push_back(internal::mean(samplestimes));
+                }
+                internal::StatisticsPrinter printer(runtimes);
             }
             return 0;
         }
@@ -139,10 +183,10 @@ namespace krom {
 #define KROM_METER(suite, name, samples, runs) \
     namespace meter { \
       struct CONCAT(Krom_, suite, name, samples, runs) \
-        : public krom::KromMeterBase \
+        : public krom::internal::KromMeterBase \
       { \
         CONCAT(Krom_, suite, name, samples, runs)() \
-          : krom::KromMeterBase(#suite, #name, samples, runs) \
+          : krom::internal::KromMeterBase(#suite, #name, samples, runs) \
         {} \
         inline void Body(); \
       }; \

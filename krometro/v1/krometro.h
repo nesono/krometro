@@ -77,7 +77,7 @@ namespace krom
         using testmap_t = std::multimap<std::string, KromMeterBase *>;
 
         struct KromMeterRegistry {
-             testmap_t test_registry;
+            testmap_t test_registry;
 
             static KromMeterRegistry &instance() {
                 static KromMeterRegistry instance;
@@ -174,6 +174,7 @@ namespace krom
             return instance;
         }
     };
+}
 
 #define RUN_ALL_TESTS() krom::TestRunner::instance().runAllTests();
 
@@ -193,4 +194,3 @@ namespace krom
       static CONCAT(Krom_, suite, name, samples, runs) CONCAT(kromInstance, suite, name, samples, runs); \
     } \
     inline void meter::CONCAT(Krom_, suite, name, samples, runs)::Body()
-}

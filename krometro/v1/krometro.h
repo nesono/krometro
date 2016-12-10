@@ -128,9 +128,10 @@ namespace krom
 
         struct StatisticsPrinter
         {
-            StatisticsPrinter(const std::vector<uint64_t>& observations)
+            StatisticsPrinter(const std::vector<uint64_t>& observations, uint64_t samples)
             {
-                std::cout << "  Results of " << observations.size() << " runs given in nanoseconds" << std::endl;
+                std::cout << "  Observed " << observations.size() << " runs with "
+                          << samples << " iterations each." << std::endl;
                 auto minmax = std::minmax_element(observations.begin(), observations.end());
                 std::cout << "    min: " << *minmax.first << " ns" << std::endl;
                 std::cout << "    max: " << *minmax.second << " ns" << std::endl;
@@ -163,7 +164,7 @@ namespace krom
                     }
                     runtimes.push_back(internal::mean(samplestimes));
                 }
-                internal::StatisticsPrinter printer(runtimes);
+                internal::StatisticsPrinter printer(runtimes, test.second->_samples);
             }
             return 0;
         }

@@ -7,7 +7,7 @@ class KrometroConan(ConanFile):
    url = "https://github.com/nesono/krometro.git"
    settings = "os", "compiler", "build_type", "arch"
    requires = "gtest/1.8.0@lasote/stable"
-   generators = "cmake"
+   generators = "cmake", "txt", "env"
    default_options = "gtest:shared=False"
 
    def imports(self):

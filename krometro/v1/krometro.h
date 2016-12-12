@@ -175,6 +175,13 @@ namespace krom
             return instance;
         }
     };
+
+    struct KromFixture
+    {
+        virtual void Setup() {}
+        virtual void Teardown() {}
+        virtual void Baseline() {}
+    };
 }
 
 #define RUN_ALL_TESTS() krom::TestRunner::instance().runAllTests();
@@ -190,6 +197,27 @@ namespace krom
         CONCAT(Krom_, suite, name, samples, runs)() \
           : krom::internal::KromMeterBase(#suite, #name, samples, runs) \
         {} \
+        inline void Body(); \
+      }; \
+      static CONCAT(Krom_, suite, name, samples, runs) CONCAT(kromInstance, suite, name, samples, runs); \
+    } \
+    inline void meter::CONCAT(Krom_, suite, name, samples, runs)::Body()
+
+#define KROM_METER_F(suite, name, samples, runs) \
+    namespace meter { \
+      struct CONCAT(Krom_, suite, name, samples, runs) \
+        : public suite, public krom::internal::KromMeterBase \
+      { \
+        CONCAT(Krom_, suite, name, samples, runs)() \
+          : krom::internal::KromMeterBase(#suite, #name, samples, runs), \
+            suite() \
+        { \
+            Setup(); \
+        } \
+        ~CONCAT(Krom_, suite, name, samples, runs)() \
+        { \
+            Teardown(); \
+        } \
         inline void Body(); \
       }; \
       static CONCAT(Krom_, suite, name, samples, runs) CONCAT(kromInstance, suite, name, samples, runs); \

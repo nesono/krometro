@@ -69,6 +69,33 @@ KROM_METER(statistics, stddev_slow, 100, 10)
     auto result = slow_stddev(testvec);
 }
 
+struct stat_fixture : public krom::KromFixture
+{
+    void Setup()
+    {
+        testvec.resize(1000);
+        for(auto i : testvec)
+        {
+            i = rand();
+        }
+    }
+
+    void Teardown() {}
+
+    void Baseline()
+    {
+        auto result = slow_stddev(testvec);
+    }
+
+    std::vector<int32_t> testvec;
+};
+
+KROM_METER_F(stat_fixture, stddev_slow, 100, 10)
+{
+
+    auto result = slow_stddev(testvec);
+}
+
 int main() {
     return RUN_ALL_TESTS();
 }

@@ -3,7 +3,7 @@ project(krometro)
 
 set(CMAKE_CXX_STANDARD 11)
 
-include(conanbuildinfo.cmake)
+include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
 set(SOURCE_FILES main.cpp krometro/v1/krometro.h)

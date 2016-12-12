@@ -106,10 +106,10 @@ namespace krom
 
             virtual void Body() = 0;
 
-            std::string _suite;
-            std::string _name;
-            uint32_t _samples;
-            uint32_t _runs;
+            const std::string _suite;
+            const std::string _name;
+            const uint32_t _samples;
+            const uint32_t _runs;
         };
 
         struct TestrunDecorator

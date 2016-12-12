@@ -146,7 +146,8 @@ namespace krom
         int runAllTests() const
         {
             auto testmap = internal::KromMeterRegistry::instance().test_registry;
-            for (auto test : testmap) {
+            for (auto test : testmap)
+            {
                 internal::TestrunDecorator deco(test);
                 std::vector<uint64_t> runtimes;
 

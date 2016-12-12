@@ -148,26 +148,39 @@ namespace krom
             auto testmap = internal::KromMeterRegistry::instance().test_registry;
             for (auto test : testmap)
             {
-                internal::TestrunDecorator deco(test);
-                std::vector<uint64_t> runtimes;
+                runOneTest(test);
 
-                for(auto r = 0; r < test.second->_runs; ++r)
-                {
-                    std::vector<uint64_t> samplestimes;
-
-                    for(auto s = 0; s < test.second->_samples; ++s)
-                    {
-                        auto start = std::chrono::high_resolution_clock::now();
-                        test.second->Body();
-                        auto end = std::chrono::high_resolution_clock::now();
-                        samplestimes.push_back(
-                                std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
-                    }
-                    runtimes.push_back(internal::mean(samplestimes));
-                }
-                internal::StatisticsPrinter printer(runtimes, test.second->_samples);
             }
             return 0;
+        }
+
+        template <class Type>
+        void runOneTest(const Type &test) const
+        {
+            internal::TestrunDecorator deco(test);
+            std::vector<uint64_t> runtimes;
+
+            for(auto r = 0; r < test.second->_runs; ++r)
+            {
+                performTestRun(test, runtimes);
+
+            }
+            internal::StatisticsPrinter printer(runtimes, test.second->_samples);
+        }
+
+        template <class Type>
+        void performTestRun(const Type &test, std::vector<uint64_t> &runtimes) const {
+            std::vector<uint64_t> samplestimes;
+
+            for(auto s = 0; s < test.second->_samples; ++s)
+            {
+                auto start = std::chrono::steady_clock::now();
+                test.second->Body();
+                auto end = std::chrono::steady_clock::now();
+                samplestimes.push_back(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
+            }
+            runtimes.push_back(internal::mean(samplestimes));
         }
 
         static TestRunner& instance()

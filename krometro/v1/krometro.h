@@ -116,30 +116,38 @@ namespace krom
         {
             TestrunDecorator(const testmap_t::value_type& test): _test(test)
             {
-                std::cout << "[KROMRUN " << test.second->_suite << "." << test.second->_name << "]" << std::endl;
+                std::cout << "[ METER    ] " << test.second->_suite << "." << test.second->_name << std::endl;
             }
             ~TestrunDecorator()
             {
-                std::cout << "[" << _test.second->_suite << "." << _test.second->_name << " DONE]" << std::endl;
+                std::cout << "[     DONE ] " << _test.second->_suite << "." << _test.second->_name << std::endl;
                 std::cout << std::endl;
             }
             const testmap_t::value_type& _test;
         };
 
+        // TODO 2016-12-14 - iss: make this a static function?
         struct StatisticsPrinter
         {
-            StatisticsPrinter(const std::vector<uint64_t>& observations, uint64_t samples)
+            StatisticsPrinter(const std::vector<double>& observations, uint64_t samples)
             {
-                std::cout << "  Observed " << observations.size() << " runs with "
+                std::cout << "[          ] " << "  Observed " << observations.size() << " runs with "
                           << samples << " iterations each." << std::endl;
                 auto minmax = std::minmax_element(observations.begin(), observations.end());
-                std::cout << "    min: " << *minmax.first << " ns" << std::endl;
-                std::cout << "    max: " << *minmax.second << " ns" << std::endl;
-                std::cout << "    mean: " << mean(observations) << " ns " << std::endl;
-                std::cout << "    std dev: " << standarddeviation(observations) << " ns" << std::endl;
+                std::cout << "[          ] "<< "    min: " << *minmax.first << " ns" << std::endl;
+                std::cout << "[          ] "<< "    max: " << *minmax.second << " ns" << std::endl;
+                std::cout << "[          ] "<< "    mean: " << mean(observations) << " ns " << std::endl;
+                std::cout << "[          ] "<< "    std dev: " << standarddeviation(observations) << " ns" << std::endl;
             }
         };
     }
+
+    struct KromFixture
+    {
+        virtual void Setup() {}
+        virtual void Teardown() {}
+        virtual void Baseline() {}
+    };
 
     struct TestRunner
     {
@@ -148,28 +156,41 @@ namespace krom
             auto testmap = internal::KromMeterRegistry::instance().test_registry;
             for (auto test : testmap)
             {
-                runOneTest(test);
+                internal::TestrunDecorator deco(test);
 
+                std::function<void()> testMethod = std::bind(&internal::KromMeterBase::Body, test.second);
+                runOneTest(test, testMethod);
+
+                KromFixture* fixtureTest;
+                if((fixtureTest = dynamic_cast<KromFixture*>(test.second)) != nullptr)
+                {
+                    std::cout << "[ BASELINE ] " << std::endl;
+                    std::function<void()> baseline = std::bind(&KromFixture::Baseline, fixtureTest);
+                    runOneTest(test, baseline);
+                }
             }
             return 0;
         }
 
-        template <class Type>
-        void runOneTest(const Type &test) const
+        template <class KromMeterType>
+        void runOneTest(const KromMeterType &test, std::function<void()>& testMethod) const
         {
-            internal::TestrunDecorator deco(test);
-            std::vector<uint64_t> runtimes;
+            std::vector<double> runtimes;
 
             for(auto r = 0; r < test.second->_runs; ++r)
             {
-                performTestRun(test, runtimes);
+                performTestRun(test, runtimes, testMethod);
 
             }
-            internal::StatisticsPrinter printer(runtimes, test.second->_samples);
+            internal::StatisticsPrinter autPrinter(runtimes, test.second->_samples);
         }
 
-        template <class Type>
-        void performTestRun(const Type &test, std::vector<uint64_t> &runtimes) const {
+        template <class KromMeterType>
+        void performTestRun(
+                const KromMeterType &test,
+                std::vector<double> &runtimes,
+                std::function<void()>& testMethod) const
+        {
             std::vector<uint64_t> samplestimes;
 
             for(auto s = 0; s < test.second->_samples; ++s)
@@ -178,7 +199,12 @@ namespace krom
                 test.second->Body();
                 auto end = std::chrono::steady_clock::now();
                 samplestimes.push_back(
-                        std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
+                        static_cast<uint64_t>(
+                                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                        end - start
+                                ).count()
+                        )
+                );
             }
             runtimes.push_back(internal::mean(samplestimes));
         }
@@ -188,13 +214,6 @@ namespace krom
             static TestRunner instance;
             return instance;
         }
-    };
-
-    struct KromFixture
-    {
-        virtual void Setup() {}
-        virtual void Teardown() {}
-        virtual void Baseline() {}
     };
 }
 

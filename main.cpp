@@ -26,6 +26,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    */
 
+#define USE_KROMETRO_MAIN 1
+
 #include <iostream>
 #include <cstdlib>
 #include "krometro/v1/krometro.h"
@@ -94,8 +96,4 @@ KROM_METER_F(stat_fixture, stddev_slow, 100, 10)
 {
 
     auto result = slow_stddev(testvec);
-}
-
-int main() {
-    return RUN_ALL_TESTS();
 }

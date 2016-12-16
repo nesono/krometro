@@ -32,7 +32,7 @@
 #define USE_KROMETRO_MAIN 1
 #include "krometro/v1/krometro.h"
 
-const int vecsize = 5000;
+const int vecsize = 1000;
 
 KROM_METER(statistics, stddev, 100, 10)
 {

@@ -6,7 +6,9 @@ set(CMAKE_CXX_STANDARD 11)
 include(${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-set(SOURCE_FILES main.cpp krometro/v1/krometro.h)
+include_directories(include)
+
+set(SOURCE_FILES main.cpp include/krometro/v1/krometro.h)
 add_executable(krometro ${SOURCE_FILES})
 
 include(FindGTest)

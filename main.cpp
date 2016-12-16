@@ -26,15 +26,17 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    */
 
-#define USE_KROMETRO_MAIN 1
-
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+
+#define USE_KROMETRO_MAIN 1
 #include "krometro/v1/krometro.h"
+
+const int vecsize = 5000;
 
 KROM_METER(statistics, stddev, 100, 10)
 {
-    std::vector<int32_t> testvec(1000);
+    std::vector<int32_t> testvec(vecsize);
     for(auto i : testvec)
     {
         i = rand();
@@ -63,7 +65,7 @@ double slow_stddev(const std::vector<T> &observations)
 
 KROM_METER(statistics, stddev_slow, 100, 10)
 {
-    std::vector<int32_t> testvec(1000);
+    std::vector<int32_t> testvec(vecsize);
     for(auto i : testvec)
     {
         i = rand();
@@ -75,7 +77,28 @@ struct stat_fixture : public krom::KromFixture
 {
     void Setup()
     {
-        testvec.resize(1000);
+        testvec.resize(vecsize);
+        for(auto i : testvec)
+        {
+            i = rand();
+        }
+    }
+
+    void Teardown() {}
+
+    std::vector<int32_t> testvec;
+};
+
+KROM_METER_F(stat_fixture, stddev, 100, 10)
+{
+    auto result = krom::internal::standarddeviation(testvec);
+}
+
+struct stat_fixture_baseline : public krom::KromFixture
+{
+    void Setup()
+    {
+        testvec.resize(vecsize);
         for(auto i : testvec)
         {
             i = rand();
@@ -92,8 +115,7 @@ struct stat_fixture : public krom::KromFixture
     std::vector<int32_t> testvec;
 };
 
-KROM_METER_F(stat_fixture, stddev_slow, 100, 10)
+KROM_METER_F(stat_fixture_baseline, stddev, 100, 10)
 {
-
-    auto result = slow_stddev(testvec);
+    auto result = krom::internal::standarddeviation(testvec);
 }

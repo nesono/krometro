@@ -94,7 +94,7 @@ KROM_METER_F(stat_fixture, stddev, 100, 10)
     auto result = krom::internal::standarddeviation(testvec);
 }
 
-struct stat_fixture_baseline : public krom::KromFixture
+struct stat_fixture_baseline : public krom::KromFixtureBaseline
 {
     void Setup()
     {

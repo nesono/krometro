@@ -110,6 +110,7 @@ namespace krom
             const std::string _name;
             const uint32_t _samples;
             const uint32_t _runs;
+            std::vector<double> _runtimes;
         };
 
         struct TestrunDecorator
@@ -146,7 +147,13 @@ namespace krom
     {
         virtual void Setup() {}
         virtual void Teardown() {}
+    };
+
+    struct KromFixtureBaseline : public KromFixture
+    {
         virtual void Baseline() {}
+
+        std::vector<double> _runtimes_baseline;
     };
 
     struct TestRunner
@@ -159,21 +166,25 @@ namespace krom
                 internal::TestrunDecorator deco(test);
 
                 std::function<void()> testMethod = std::bind(&internal::KromMeterBase::Body, test.second);
-                runOneTest(test, testMethod);
+                test.second->_runtimes = runOneTest(test, testMethod);
 
-                KromFixture* fixtureTest;
-                if((fixtureTest = dynamic_cast<KromFixture*>(test.second)) != nullptr)
+                KromFixtureBaseline* fixtureBaseline;
+                if((fixtureBaseline = dynamic_cast<KromFixtureBaseline*>(test.second)) != nullptr)
                 {
                     std::cout << "[ BASELINE ] " << std::endl;
-                    std::function<void()> baseline = std::bind(&KromFixture::Baseline, fixtureTest);
-                    runOneTest(test, baseline);
+                    std::function<void()> baseline = std::bind(&KromFixtureBaseline::Baseline, fixtureBaseline);
+                    fixtureBaseline->_runtimes_baseline = runOneTest(test, baseline);
+                    auto speedup = internal::mean(fixtureBaseline->_runtimes_baseline) /
+                                   internal::mean(test.second->_runtimes);
+                    std::cout << "[          ] " << " Speedup: Test was " << speedup << " times "
+                              << (speedup > 1.0 ? " faster" : " slower") << std::endl;
                 }
             }
             return 0;
         }
 
         template <class KromMeterType>
-        void runOneTest(const KromMeterType &test, std::function<void()>& testMethod) const
+        std::vector<double> runOneTest(const KromMeterType &test, std::function<void()>& testMethod) const
         {
             std::vector<double> runtimes;
 
@@ -183,6 +194,7 @@ namespace krom
 
             }
             internal::StatisticsPrinter autPrinter(runtimes, test.second->_samples);
+            return runtimes;
         }
 
         template <class KromMeterType>

@@ -196,7 +196,7 @@ namespace krom
             for(auto s = 0; s < test.second->_samples; ++s)
             {
                 auto start = std::chrono::steady_clock::now();
-                test.second->Body();
+                testMethod();
                 auto end = std::chrono::steady_clock::now();
                 samplestimes.push_back(
                         static_cast<uint64_t>(

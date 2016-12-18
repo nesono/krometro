@@ -6,7 +6,7 @@ Welcome to **Krometro**, a header only micro benchmark library for C/C++. Kromet
 
 * Simple header only consumption
 * Easy to use interface, similar to googletest
-* Fixtures support to for
+* Fixtures support for
     * Setup
     * Teardown
     * Baseline (Algorithm)

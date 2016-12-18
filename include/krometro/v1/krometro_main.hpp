@@ -26,23 +26,10 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    */
 
-#include "gtest/gtest.h"
-#include "krometro/v1/krometro.hpp"
+#pragma once
 
-using namespace krom::internal;
-
-TEST(statistics, standard_deviation_ut)
-{
-    EXPECT_FLOAT_EQ(standarddeviation(std::vector<int>{-1,1,2}), 1.527525);
-    EXPECT_FLOAT_EQ(standarddeviation(std::vector<float>{1.5,-0.2,142000.1235,98.2}), 70983.50);
+int main() {
+    return RUN_ALL_TESTS();
 }
-
-TEST(statistics, mean_ut)
-{
-    EXPECT_FLOAT_EQ(mean(std::vector<int>{-1,1,2}), 0.666666667);
-    EXPECT_FLOAT_EQ(mean(std::vector<float>{1.5,-0.2,142000.1235,98.2}), 35524.91);
-}
-
-
 
 

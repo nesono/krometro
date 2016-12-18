@@ -29,8 +29,8 @@
 #include <cstdlib>
 #include <iostream>
 
-#define USE_KROMETRO_MAIN 1
-#include "krometro/v1/krometro.h"
+#include "krometro/v1/krometro.hpp"
+#include "krometro/v1/krometro_main.hpp"
 
 const int vecsize = 1000;
 

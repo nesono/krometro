@@ -8,7 +8,7 @@ class KrometroConan(ConanFile):
     requires = "gtest/1.8.0@lasote/stable"
     generators = "cmake", "txt", "env"
     default_options = "gtest:shared=False"
-    exports = "include/krometro/v1/krometro.h"
+    exports = "include/krometro/v1/krometro.hpp", "include/krometro/v1/krometro_main.hpp"
     build_policy = "missing"
 
     def imports(self):

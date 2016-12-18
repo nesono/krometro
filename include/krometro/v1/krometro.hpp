@@ -25,6 +25,7 @@
    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    */
+
 #pragma once
 
 #include <vector>
@@ -268,12 +269,3 @@ namespace krom
       static CONCAT(Krom_, suite, name, samples, runs) CONCAT(kromInstance, suite, name, samples, runs); \
     } \
     inline void meter::CONCAT(Krom_, suite, name, samples, runs)::Body()
-
-
-#ifdef USE_KROMETRO_MAIN
-
-int main() {
-    return RUN_ALL_TESTS();
-}
-
-#endif

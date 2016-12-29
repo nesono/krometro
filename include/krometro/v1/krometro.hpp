@@ -177,8 +177,8 @@ namespace krom
                     fixtureBaseline->_runtimes_baseline = runOneTest(test, baseline);
                     auto speedup = internal::mean(fixtureBaseline->_runtimes_baseline) /
                                    internal::mean(test.second->_runtimes);
-                    std::cout << "[          ] " << " Speedup: Test was " << speedup << " times "
-                              << (speedup > 1.0 ? " faster" : " slower") << std::endl;
+                    std::cout << "[   RESULT ] " << " Speedup: " << speedup << " times "
+                              << (speedup > 1.0 ? "faster" : "slower") << std::endl;
                 }
             }
             return 0;

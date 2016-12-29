@@ -9,11 +9,9 @@ conan_basic_setup()
 include_directories(include)
 
 set(SOURCE_FILES
-        main.cpp
         include/krometro/v1/krometro.hpp
         include/krometro/v1/krometro_main.hpp
         )
-add_executable(krometro ${SOURCE_FILES})
 
 include(FindGTest)
 enable_testing()

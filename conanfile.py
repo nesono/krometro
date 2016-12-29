@@ -9,6 +9,7 @@ class KrometroConan(ConanFile):
     default_options = "gtest:shared=False"
     exports = "include/krometro/v1/krometro.hpp", "include/krometro/v1/krometro_main.hpp"
     build_policy = "missing"
+    description = "Krometro is a header-only micro benchmark library for C/C++ and is based on the C++11 standard."
 
     def configure(self):
         if self.scope.dev:

@@ -19,3 +19,6 @@ class KrometroConan(ConanFile):
         self.copy("*.dll", dst="bin", src="bin") # From bin to bin
         self.copy("*.dylib*", dst="bin", src="lib") # From lib to bin
 
+    def package(self):
+        self.copy("*.hpp", "include", "include")
+

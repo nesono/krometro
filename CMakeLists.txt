@@ -16,6 +16,10 @@ set(SOURCE_FILES
 include(FindGTest)
 enable_testing()
 
-add_executable(statistics_ut statistics_ut.cpp)
-target_link_libraries(statistics_ut ${CONAN_LIBS})
-GTEST_ADD_TESTS(statistics_ut "" statistics_ut.cpp)
+set(UNIT_TEST_SRCS
+        statistics_ut.cpp
+        main.cpp)
+
+add_executable(krometro_ut ${UNIT_TEST_SRCS})
+target_link_libraries(krometro_ut ${CONAN_LIBS})
+GTEST_ADD_TESTS(krometro_ut "" ${UNIT_TEST_SRCS})

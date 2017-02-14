@@ -29,12 +29,12 @@
 #include "gtest/gtest.h"
 #include "krometro/v1/krometro.hpp"
 
-using namespace krom::internal;
+using namespace krom;
 
 TEST(statistics, standard_deviation_ut)
 {
-    EXPECT_FLOAT_EQ(standarddeviation(std::vector<int>{-1,1,2}), 1.527525);
-    EXPECT_FLOAT_EQ(standarddeviation(std::vector<float>{1.5,-0.2,142000.1235,98.2}), 70983.50);
+    EXPECT_FLOAT_EQ(stddev(std::vector<int>{-1, 1, 2}), 1.527525);
+    EXPECT_FLOAT_EQ(stddev(std::vector<float>{1.5, -0.2, 142000.1235, 98.2}), 70983.50);
 }
 
 TEST(statistics, mean_ut)

@@ -37,42 +37,44 @@
 
 namespace krom
 {
-    namespace internal {
-        template<class T>
-        double standarddeviation(const std::vector<T> &observations) {
-            /*  // This is a plain implementation
-                double e_x = 0;
-                for (auto i : observations) {
-                    e_x += i;
-                }
-                auto N = observations.size();
-                e_x /= N;
-                double res = 0;
-                for (auto i : observations) {
-                    auto tmp = i - e_x;
-                    res += tmp * tmp;
-                }
-
-                auto variance = res / (N - 1);
-                return std::sqrt(variance);
-                //  below is an optimized implementation */
-            double A = observations[0];
-            double Q = 0;
-            for (auto i = 1U; i < observations.size(); ++i) {
-                auto A_1 = A;
-                A += (observations[i] - A) / (i + 1);
-                Q += (observations[i] - A_1) * (observations[i] - A);
+    template<class T>
+    double stddev(const std::vector<T> &observations) {
+        /*  // This is a plain implementation
+            double e_x = 0;
+            for (auto i : observations) {
+                e_x += i;
             }
-            return std::sqrt(Q / (observations.size() - 1));
-        }
+            auto N = observations.size();
+            e_x /= N;
+            double res = 0;
+            for (auto i : observations) {
+                auto tmp = i - e_x;
+                res += tmp * tmp;
+            }
 
-        template<class T>
-        double mean(const std::vector<T> &observations) {
-            double m = 0;
-            for (auto v: observations)
-                m += v;
-            return m / observations.size();
+            auto variance = res / (N - 1);
+            return std::sqrt(variance);
+            //  below is an optimized implementation */
+        double A = observations[0];
+        double Q = 0;
+        for (auto i = 1U; i < observations.size(); ++i) {
+            auto A_1 = A;
+            A += (observations[i] - A) / (i + 1);
+            Q += (observations[i] - A_1) * (observations[i] - A);
         }
+        return std::sqrt(Q / (observations.size() - 1));
+    }
+
+    template<class T>
+    double mean(const std::vector<T> &observations) {
+        double m = 0;
+        for (auto v: observations)
+            m += v;
+        return m / observations.size();
+    }
+
+    namespace internal {
+
 
         struct KromMeterBase;
         using testmap_t = std::multimap<std::string, KromMeterBase *>;
@@ -136,7 +138,7 @@ namespace krom
             std::cout << "[          ] "<< "    min: " << *minmax.first << " ns" << std::endl;
             std::cout << "[          ] "<< "    max: " << *minmax.second << " ns" << std::endl;
             std::cout << "[          ] "<< "    mean: " << mean(observations) << " ns " << std::endl;
-            std::cout << "[          ] "<< "    std dev: " << standarddeviation(observations) << " ns" << std::endl;
+            std::cout << "[          ] "<< "    std dev: " << stddev(observations) << " ns" << std::endl;
         }
     }
 
@@ -149,6 +151,18 @@ namespace krom
     struct KromFixtureBaseline : public KromFixture
     {
         virtual void Baseline() {}
+        virtual void Validate(const std::vector<double>& dut_runtimes, const std::vector<double>& baseline_runtimes)
+        {
+            std::cout << "[ VALIDATE ] ";
+            if(mean(baseline_runtimes) < mean(dut_runtimes) )
+            {
+                 std::cout << " Error: Baseline was faster in average" << std::endl;
+            }
+            else
+            {
+                std::cout << " Success: Code under test was faster in average" << std::endl;
+            }
+        }
 
         std::vector<double> _runtimes_baseline;
     };
@@ -171,10 +185,11 @@ namespace krom
                     std::cout << "[ BASELINE ] " << std::endl;
                     std::function<void()> baseline = std::bind(&KromFixtureBaseline::Baseline, fixtureBaseline);
                     fixtureBaseline->_runtimes_baseline = runOneTest(test, baseline);
-                    auto speedup = internal::mean(fixtureBaseline->_runtimes_baseline) /
-                                   internal::mean(test.second->_runtimes);
+                    auto speedup = mean(fixtureBaseline->_runtimes_baseline) /
+                                   mean(test.second->_runtimes);
                     std::cout << "[   RESULT ] " << " Speedup: " << speedup << " times "
                               << (speedup > 1.0 ? "faster" : "slower") << std::endl;
+                    fixtureBaseline->Validate(test.second->_runtimes, fixtureBaseline->_runtimes_baseline);
                 }
             }
             return 0;
@@ -215,7 +230,7 @@ namespace krom
                         )
                 );
             }
-            runtimes.push_back(internal::mean(samplestimes));
+            runtimes.push_back(mean(samplestimes));
         }
 
         static TestRunner& instance()

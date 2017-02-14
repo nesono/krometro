@@ -41,7 +41,7 @@ KROM_METER(statistics, stddev, 100, 10)
     {
         i = rand();
     }
-    auto result = krom::internal::standarddeviation(testvec);
+    auto result = krom::stddev(testvec);
 }
 
 template<class T>
@@ -91,7 +91,7 @@ struct stat_fixture : public krom::KromFixture
 
 KROM_METER_F(stat_fixture, stddev, 100, 10)
 {
-    auto result = krom::internal::standarddeviation(testvec);
+    auto result = krom::stddev(testvec);
 }
 
 struct stat_fixture_baseline : public krom::KromFixtureBaseline
@@ -117,5 +117,5 @@ struct stat_fixture_baseline : public krom::KromFixtureBaseline
 
 KROM_METER_F(stat_fixture_baseline, stddev, 100, 10)
 {
-    auto result = krom::internal::standarddeviation(testvec);
+    auto result = krom::stddev(testvec);
 }

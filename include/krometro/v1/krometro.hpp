@@ -86,7 +86,7 @@ namespace krom
             }
         };
 
-        void registerKromMeter(std::string suite, KromMeterBase *meter) {
+        inline void registerKromMeter(std::string suite, KromMeterBase *meter) {
             KromMeterRegistry::instance().test_registry.emplace(suite, meter);
         }
 
@@ -128,20 +128,16 @@ namespace krom
             const testmap_t::value_type& _test;
         };
 
-        // TODO 2016-12-14 - iss: make this a static function?
-        struct StatisticsPrinter
+        inline void printStatistics(const std::vector<double> &observations, uint64_t samples)
         {
-            StatisticsPrinter(const std::vector<double>& observations, uint64_t samples)
-            {
-                std::cout << "[          ] " << "  Observed " << observations.size() << " runs with "
-                          << samples << " iterations each." << std::endl;
-                auto minmax = std::minmax_element(observations.begin(), observations.end());
-                std::cout << "[          ] "<< "    min: " << *minmax.first << " ns" << std::endl;
-                std::cout << "[          ] "<< "    max: " << *minmax.second << " ns" << std::endl;
-                std::cout << "[          ] "<< "    mean: " << mean(observations) << " ns " << std::endl;
-                std::cout << "[          ] "<< "    std dev: " << standarddeviation(observations) << " ns" << std::endl;
-            }
-        };
+            std::cout << "[          ] " << "  Observed " << observations.size() << " runs with "
+                      << samples << " iterations each." << std::endl;
+            auto minmax = std::minmax_element(observations.begin(), observations.end());
+            std::cout << "[          ] "<< "    min: " << *minmax.first << " ns" << std::endl;
+            std::cout << "[          ] "<< "    max: " << *minmax.second << " ns" << std::endl;
+            std::cout << "[          ] "<< "    mean: " << mean(observations) << " ns " << std::endl;
+            std::cout << "[          ] "<< "    std dev: " << standarddeviation(observations) << " ns" << std::endl;
+        }
     }
 
     struct KromFixture
@@ -194,11 +190,11 @@ namespace krom
                 performTestRun(test, runtimes, testMethod);
 
             }
-            internal::StatisticsPrinter autPrinter(runtimes, test.second->_samples);
+            internal::printStatistics(runtimes, test.second->_samples);
             return runtimes;
         }
 
-        template <class KromMeterType>
+        template <class KromMeterType, class ClockType=std::chrono::steady_clock>
         void performTestRun(
                 const KromMeterType &test,
                 std::vector<double> &runtimes,
@@ -208,9 +204,9 @@ namespace krom
 
             for(auto s = 0; s < test.second->_samples; ++s)
             {
-                auto start = std::chrono::steady_clock::now();
+                auto start = ClockType::now();
                 testMethod();
-                auto end = std::chrono::steady_clock::now();
+                auto end = ClockType::steady_clock::now();
                 samplestimes.push_back(
                         static_cast<uint64_t>(
                                 std::chrono::duration_cast<std::chrono::nanoseconds>(

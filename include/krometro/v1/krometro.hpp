@@ -37,6 +37,12 @@
 
 namespace krom
 {
+    inline std::ostream& print(std::string label="")
+    {
+        fprintf(stdout, "[ %-8s ] ", label.c_str());
+        return std::cout;
+    }
+
     template<class T>
     double stddev(const std::vector<T> &observations) {
         /*  // This is a plain implementation
@@ -120,11 +126,11 @@ namespace krom
         {
             TestrunDecorator(const testmap_t::value_type& test): _test(test)
             {
-                std::cout << "[ METER    ] " << test.second->_suite << "." << test.second->_name << std::endl;
+                krom::print("METER") << test.second->_suite << "." << test.second->_name << std::endl;
             }
             ~TestrunDecorator()
             {
-                std::cout << "[     DONE ] " << _test.second->_suite << "." << _test.second->_name << std::endl;
+                krom::print("DONE") << _test.second->_suite << "." << _test.second->_name << std::endl;
                 std::cout << std::endl;
             }
             const testmap_t::value_type& _test;
@@ -132,13 +138,13 @@ namespace krom
 
         inline void printStatistics(const std::vector<double> &observations, uint64_t samples)
         {
-            std::cout << "[          ] " << "  Observed " << observations.size() << " runs with "
+            krom::print() << "  Observed " << observations.size() << " runs with "
                       << samples << " iterations each." << std::endl;
             auto minmax = std::minmax_element(observations.begin(), observations.end());
-            std::cout << "[          ] "<< "    min: " << *minmax.first << " ns" << std::endl;
-            std::cout << "[          ] "<< "    max: " << *minmax.second << " ns" << std::endl;
-            std::cout << "[          ] "<< "    mean: " << mean(observations) << " ns " << std::endl;
-            std::cout << "[          ] "<< "    std dev: " << stddev(observations) << " ns" << std::endl;
+            krom::print() << "    min: " << *minmax.first << " ns" << std::endl;
+            krom::print() << "    max: " << *minmax.second << " ns" << std::endl;
+            krom::print() << "    mean: " << mean(observations) << " ns " << std::endl;
+            krom::print() << "    std dev: " << stddev(observations) << " ns" << std::endl;
         }
     }
 
@@ -153,14 +159,13 @@ namespace krom
         virtual void Baseline() {}
         virtual void Validate(const std::vector<double>& dut_runtimes, const std::vector<double>& baseline_runtimes)
         {
-            std::cout << "[ VALIDATE ] ";
             if(mean(baseline_runtimes) < mean(dut_runtimes) )
             {
-                 std::cout << " Error: Baseline was faster in average" << std::endl;
+                 krom::print() << " Error: Baseline was faster in average" << std::endl;
             }
             else
             {
-                std::cout << " Success: Code under test was faster in average" << std::endl;
+                krom::print() << " Success: Code under test was faster in average" << std::endl;
             }
         }
 
@@ -182,13 +187,15 @@ namespace krom
                 KromFixtureBaseline* fixtureBaseline;
                 if((fixtureBaseline = dynamic_cast<KromFixtureBaseline*>(test.second)) != nullptr)
                 {
-                    std::cout << "[ BASELINE ] " << std::endl;
+                    krom::print("BASELINE") << std::endl;
                     std::function<void()> baseline = std::bind(&KromFixtureBaseline::Baseline, fixtureBaseline);
                     fixtureBaseline->_runtimes_baseline = runOneTest(test, baseline);
                     auto speedup = mean(fixtureBaseline->_runtimes_baseline) /
                                    mean(test.second->_runtimes);
-                    std::cout << "[   RESULT ] " << " Speedup: " << speedup << " times "
+                    krom::print("TIME") << " Average: " << speedup << " times "
                               << (speedup > 1.0 ? "faster" : "slower") << std::endl;
+
+                    krom::print("VALIDATE") << std::endl;
                     fixtureBaseline->Validate(test.second->_runtimes, fixtureBaseline->_runtimes_baseline);
                 }
             }

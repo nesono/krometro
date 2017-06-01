@@ -10,6 +10,7 @@ Welcome to **Krometro**, a header only micro benchmark library for C/C++. Kromet
     * Setup
     * Teardown
     * Baseline (Algorithm)
+    * Custom Runtime Validation
 
 ## Platforms
 

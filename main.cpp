@@ -28,6 +28,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <algorithm> // min_element
 
 #include "krometro/v1/krometro.hpp"
 #include "krometro/v1/krometro_main.hpp"
@@ -96,7 +97,7 @@ KROM_METER_F(stat_fixture, stddev, 100, 10)
 
 struct stat_fixture_baseline : public krom::KromFixtureBaseline
 {
-    void Setup()
+    void Setup() override
     {
         testvec.resize(vecsize);
         for(auto i : testvec)
@@ -105,9 +106,9 @@ struct stat_fixture_baseline : public krom::KromFixtureBaseline
         }
     }
 
-    void Teardown() {}
+    void Teardown() override {}
 
-    void Baseline()
+    void Baseline() override
     {
         auto result = slow_stddev(testvec);
     }
@@ -116,6 +117,49 @@ struct stat_fixture_baseline : public krom::KromFixtureBaseline
 };
 
 KROM_METER_F(stat_fixture_baseline, stddev, 100, 10)
+{
+    auto result = krom::stddev(testvec);
+}
+
+struct stat_fixture_baseline_validate : public krom::KromFixtureBaseline
+{
+    void Setup() override
+    {
+        testvec.resize(vecsize);
+        for(auto i : testvec)
+        {
+            i = rand();
+        }
+    }
+
+    void Teardown() override {}
+
+    void Baseline() override
+    {
+        auto result = slow_stddev(testvec);
+    }
+
+    void Validate(const std::vector<double>& dut_runtimes, const std::vector<double>& baseline_runtimes) override
+    {
+        auto min_baseline = *std::min_element(baseline_runtimes.begin(), baseline_runtimes.end());
+        auto min_dut = *std::min_element(dut_runtimes.begin(), dut_runtimes.end());
+        krom::print() << "minimum baseline: " << min_baseline << std::endl;
+        krom::print() << "minimum dut: " << min_dut << std::endl;
+        if(min_baseline < min_dut)
+        {
+            krom::print() << " Error in custom validation: Minimum of baseline was faster" << std::endl;
+        }
+        else
+        {
+            krom::print() << " Success in custom validation: Minimum runtime of code under test was" << std::endl;
+            krom::print() << " " << min_baseline / min_dut << " times faster" << std::endl;
+        }
+    }
+
+    std::vector<int32_t> testvec;
+};
+
+KROM_METER_F(stat_fixture_baseline_validate, stddev, 100, 10)
 {
     auto result = krom::stddev(testvec);
 }

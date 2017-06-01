@@ -2,7 +2,7 @@ from conans import ConanFile, CMake
 
 class KrometroConan(ConanFile):
     name = "krometro"
-    version = "0.1"
+    version = "0.2"
     license = "BSD-new"
     url = "https://github.com/nesono/krometro.git"
     generators = "cmake", "txt", "env"

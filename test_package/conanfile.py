@@ -7,7 +7,7 @@ username = os.getenv("CONAN_USERNAME", "nesono")
 
 class KrometroReuseConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    requires = "krometro/0.1@%s/%s" % (username, channel)
+    requires = "krometro/0.2@%s/%s" % (username, channel)
     generators = "cmake"
     build_policy = "missing"
 
